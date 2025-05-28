@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-# ESP32-Sleep-Monitor
-=======
-# esp32-sleep-monitor
->>>>>>> 3a03bcc168693f285a4288b13378dfb3a2eab223
 # ESP32 Sleep Monitor
 
 ## 🧠 Projekt leírása
@@ -21,23 +16,22 @@ Ez a projekt egy ESP32-alapú intelligens alvásmonitorozó rendszer, amely töb
 - 🔁 Automatikus szenzor-konfiguráció és WiFi kapcsolódás
 
 ## 📁 Mappastruktúra
-
-esp32-sleep-monitor/
-├── README.md
-├── main.cpp # ESP32 firmware
-├── app.py # Flask backend szerver
-├── dashboard.html # Webes dashboard UI
-├── /docs # Word + PowerPoint dokumentáció
-│ ├── prezentacio.pptx
-│ └── dokumentacio.docx
-├── /figures # Diagramok, képernyőképek
-│ ├── system_diagram.png
-│ ├── sensor_table.png
-│ └── sleep_quality_plot.png
-├── /logs # Naplózott adatok (gitignore-olt)
-│ └── .gitignore
-└── requirements.txt # Python csomagok a szerverhez
-
+```esp32-sleep-monitor/
+    ├── README.md
+    ├── main.cpp # ESP32 firmware
+    ├── app.py # Flask backend szerver
+    ├── dashboard.html # Webes dashboard UI
+    ├── /docs # Word + PowerPoint dokumentáció
+    │ ├── prezentacio.pptx
+    │ └── dokumentacio.docx
+    ├── /figures # Diagramok, képernyőképek
+    │ ├── system_diagram.png
+    │ ├── sensor_table.png
+    │ └── sleep_quality_plot.png
+    ├── /logs # Naplózott adatok (gitignore-olt)
+    │ └── .gitignore
+    └── requirements.txt # Python csomagok a szerverhez
+```
 ## ⚙️ Rendszerkomponensek
 
 - **ESP32**: adatgyűjtés és küldés WiFi-n keresztül
@@ -62,10 +56,10 @@ git clone https://github.com/<felhasználónév>/esp32-sleep-monitor.git
 cd esp32-sleep-monitor
 pip install -r requirements.txt
 python app.py
-
+```
 A szerver a http://<gép-ip>:5000 címen elérhető.
 
-3. Webes dashboard használata
+### 3. Webes dashboard használata
 Valós idejű adatok megtekintése
 
 Logging indítása/leállítása
@@ -74,7 +68,7 @@ Eco mód vezérlése
 
 Grafikonok letöltése ZIP-ben
 
-🔧 Követelmények
+### 🔧 Követelmények
 Hardver: ESP32 DevKit, szenzorok
 
 Szoftver:
@@ -85,12 +79,12 @@ Flask, Flask-SocketIO
 
 MsgPack, Pandas, Matplotlib
 
-🧪 Példa használat
+### 🧪 Példa használat
 Beállított alacsony fény → alvásbarát értékelés ✅
 
 Zajesemény → azonnali adatküldés + naplózás
 
 Eco mód aktiválása → ritkább frissítések, kevesebb fogyasztás
 
-📜 Licenc
+### 📜 Licenc
 MIT License © 2025 Viktor Mózer
