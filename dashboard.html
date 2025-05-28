@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ESP32 Sleep Monitor Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.0"></script>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h2 { margin-top: 40px; }
+    canvas { max-width: 100%; height: 300px; }
+    .alert { color: red; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>ESP32 Sleep Monitor Dashboard</h1>
+
+  <div id="data">
+    <p><strong>Light Level:</strong> <span id="lux">—</span> lux</p>
+    <p><strong>Color Temperature:</strong> <span id="colorTemp">—</span></p>
+    <p><strong>Temperature:</strong> <span id="temp">—</span> °C</p>
+    <p><strong>Humidity:</strong> <span id="humidity">—</span> %</p>
+    <p><strong>CO₂:</strong> <span id="eco2">—</span> ppm</p>
+    <p><strong>TVOC:</strong> <span id="tvoc">—</span> ppb</p>
+    <p><strong>Air Quality Sensor Status:</strong> <span id="ens160Status">—</span></p>
+    <p><strong>Noise:</strong> <span id="noise">—</span> dB</p>
+  </div>
+
+  <div style="position: fixed; top: 20px; right: 20px; text-align: right;">
+    <h3>Energy Saving Mode</h3>
+    <button onclick="setEcoMode(true)">ON</button>
+    <button onclick="setEcoMode(false)">OFF</button>
+    <p id="modeStatus">Current: unknown</p>
+    <hr style="margin: 10px 0;">
+    <h3>Data logging</h3>
+    <button onclick="toggleLogging()">Toggle Logging</button>
+    <button onclick="downloadLog()">Download Log</button>
+    <p id="logStatus">Logging: unknown</p>
+    <h3>Download graph</h3>
+    <button onclick="downloadPlots()">Download .zip file</button>
+  </div>
+
+  <h3>Alvásminőség értékelés:</h3>
+  <p id="sleepQuality">—</p>
+
+  <h2>Noise Level Graph</h2>
+  <canvas id="noiseChart"></canvas>
+  <button onclick="noiseChart.resetZoom()">Reset Zoom</button>
+
+  <script>
+    function setEcoMode(state) {
+      fetch('/set_mode?eco=' + (state ? 1 : 0))
+        .then(res => res.text())
+        .then(text => {
+          document.getElementById("modeStatus").innerText = "Actual: " + (state ? "ON" : "OFF");
+        })
+        .catch(err => { alert("Failed to set eco mode: " + err); });
+    }
+
+    function checkEcoStatus() {
+      fetch('/eco_status')
+        .then(res => res.json())
+        .then(json => {
+          document.getElementById("modeStatus").innerText = "Actual: " + (json.eco_mode ? "ON" : "OFF");
+        });
+    }
+
+    function toggleLogging() {
+      fetch('/toggle_logging', { method: 'POST' })
+        .then(() => fetch('/log_status'))
+        .then(res => res.json())
+        .then(json => {
+          document.getElementById("logStatus").innerText = "Logging: " + (json.logging ? "ON" : "OFF");
+        });
+    }
+
+    function checkLoggingStatus() {
+      fetch('/log_status')
+        .then(res => res.json())
+        .then(json => {
+          document.getElementById("logStatus").innerText = "Logging: " + (json.logging ? "ON" : "OFF");
+        });
+    }
+
+    function downloadLog() {
+      const date = new Date().toISOString().split('T')[0];
+      window.location.href = "/download_log?date=" + date;
+    }
+
+    function downloadPlots() {
+      const date = new Date().toISOString().split('T')[0];
+      window.location.href = "/download_plots?date=" + date;
+    }
+
+    checkEcoStatus();
+    checkLoggingStatus();
+
+    const noiseData = [];
+    const timeLabels = [];
+    const MAX_POINTS = 2000;
+
+    const noiseChart = new Chart(document.getElementById('noiseChart'), {
+      type: 'line',
+      data: {
+        labels: timeLabels,
+        datasets: [{
+          label: 'Noise (dB)',
+          data: noiseData,
+          borderColor: 'blue',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        animation: false,
+        scales: {
+          y: { beginAtZero: true }
+        },
+        plugins: {
+          zoom: {
+            pan: { enabled: true, mode: 'x' },
+            zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }
+          }
+        }
+      }
+    });
+
+    function rgbToColorTemperature(r, g, b) {
+      let X = 0.4124*r + 0.3576*g + 0.1805*b;
+      let Y = 0.2126*r + 0.7152*g + 0.0722*b;
+      let Z = 0.0193*r + 0.1192*g + 0.9505*b;
+      let denom = X + Y + Z;
+      if (denom === 0) return null;
+      let x = X / denom;
+      let y = Y / denom;
+      let n = (x - 0.3320) / (0.1858 - y);
+      let CCT = 449 * n**3 + 3525 * n**2 + 6823.3 * n + 5520.33;
+      return Math.round(CCT);
+    }
+    const sleepThresholds = {
+      temp: { min: 16.0, max: 22.5 },        // ideális hőmérséklet °C
+      humidity: { min: 40, max: 60 },        // ideális páratartalom %
+      lux: { max: 10.0 },                      // max. fényerő lux
+      eco2: { max: 1000 },                   // CO₂ ppm
+      tvoc: { max: 300 },                    // TVOC ppb
+      noise: { max: 40 },                    // Zaj dB
+      cct: { max: 4000 }                     // Színhőmérséklet Kelvin
+  };
+
+    function alertIfRange(id, value, range, label) {
+      const el = document.getElementById(id);
+      if (value == null || isNaN(value)) {
+        el.textContent = '—';
+        return false;
+      }
+
+      const tooLow = range.min !== undefined && value < range.min;
+      const tooHigh = range.max !== undefined && value > range.max;
+      if (tooLow || tooHigh) {
+        el.innerHTML = `<span class="alert">${value} ⚠️</span>`;
+        el.title = `${label} érték nem ideális (${tooLow ? 'alacsony' : 'magas'})`;
+        return false;
+      } else {
+        el.textContent = value;
+        el.title = '';
+        return true;
+      }
+    }
+
+  function updateDisplay(data) {
+    const lux = data.lux !== null ? Math.round(data.lux) : '—';
+    const r = parseFloat(data.r), g = parseFloat(data.g), b = parseFloat(data.b);
+    const cct = rgbToColorTemperature(r, g, b);
+
+    // Egészre kerekítés (ha nem null)
+    const eco2 = data.eco2 !== undefined ? Math.round(data.eco2) : '—';
+    const tvoc = data.tvoc !== undefined ? Math.round(data.tvoc) : '—';
+    const noise = data.noise !== undefined ? Math.round(data.noise) : '—';
+
+    // Hőmérséklet és páratartalom – 1 tizedesre kerekítve
+    const temp = (data.temp !== undefined && !isNaN(data.temp)) ? data.temp.toFixed(1) : '—';
+    const humidity = (data.humidity !== undefined && !isNaN(data.humidity)) ? data.humidity.toFixed(1) : '—';
+
+    document.getElementById('lux').textContent = lux;
+    document.getElementById('colorTemp').textContent = (lux > 0 && cct) ? `${cct} K` : '—';
+    document.getElementById('temp').textContent = temp;
+    document.getElementById('humidity').textContent = humidity;
+    document.getElementById('ens160Status').textContent = data.ens160Status ?? '—';
+
+    const sleepOk = {
+      temp: alertIfRange('temp', parseFloat(data.temp).toFixed(1), sleepThresholds.temp, "Hőmérséklet"),
+      humidity: alertIfRange('humidity', parseFloat(data.humidity).toFixed(1), sleepThresholds.humidity, "Páratartalom"),
+      lux: alertIfRange('lux', data.lux, sleepThresholds.lux, "Fényerő"),
+      eco2: alertIfRange('eco2', data.eco2, sleepThresholds.eco2, "CO₂"),
+      tvoc: alertIfRange('tvoc', data.tvoc, sleepThresholds.tvoc, "TVOC"),
+      noise: alertIfRange('noise', Math.round(data.noise), sleepThresholds.noise, "Zaj")
+    };
+
+    let cctOk = true;
+    if (lux > 0 && cct) {
+    document.getElementById('colorTemp').textContent = `${cct} K`;
+    cctOk = !(cct > sleepThresholds.cct.max);
+    if (!cctOk) {
+      document.getElementById('colorTemp').innerHTML = `<span class="alert">${cct} ⚠️</span>`;
+      document.getElementById('colorTemp').title = "Színhőmérséklet túl magas";
+    }
+    } else {
+      document.getElementById('colorTemp').textContent = '—';
+    }
+
+    const goodSleep = Object.values(sleepOk).every(v => v) && cctOk;
+    const sq = document.getElementById('sleepQuality');
+    sq.textContent = goodSleep ? "✅ Alvásbarát környezet" : "⚠️ Nem ideális alvási környezet";
+    sq.style.color = goodSleep ? "green" : "red";
+
+    const now = new Date().toLocaleTimeString();
+    if (noiseData.length >= MAX_POINTS) {
+      noiseData.shift(); timeLabels.shift();
+    }
+    noiseData.push(noise);
+    timeLabels.push(now);
+    noiseChart.update();
+  }
+    const socket = io();
+
+    socket.on('connect', () => {
+      console.log("✅ Socket.IO kapcsolódva");
+    });
+
+    socket.on('new_data', (message) => {
+      try {
+        updateDisplay(message);
+      } catch (e) {
+        console.warn("❌ updateDisplay hiba:", e);
+      }
+    });
+  </script>
+</body>
+</html>
