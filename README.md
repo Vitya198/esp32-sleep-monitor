@@ -60,31 +60,34 @@ python app.py
 A szerver a http://<gép-ip>:5000 címen elérhető.
 
 ### 3. Webes dashboard használata
-Valós idejű adatok megtekintése
-
-Logging indítása/leállítása
-
-Eco mód vezérlése
-
-Grafikonok letöltése ZIP-ben
+- Valós idejű adatok megtekintése
+- Logging indítása/leállítása
+- Eco mód vezérlése
+- Grafikonok letöltése ZIP-ben
 
 ### 🔧 Követelmények
-Hardver: ESP32 DevKit, szenzorok
-
-Szoftver:
-
-Python 3.9+
-
-Flask, Flask-SocketIO
-
-MsgPack, Pandas, Matplotlib
+- Hardver: 
+    - ESP32 DevKit
+    - AHTX0
+    - TCS34725
+    - BH1750
+    - ENS160
+    - INMP441
+- Szoftver:
+    - Python 3.9+
+    - Flask (webszerver), Flask-SocketIO (valós idejű kommunikációhoz)
+    - MsgPack (hatékony bináris adatátvitel)
+    - Pandas (adatkezeléshez), Matplotlib (grafikonokhoz)
+    - Werkzeug (alacsony szintű HTTP motor – Flask alatt)
+    - Eventlet vagy gevent (Flask-SocketIO háttérfolyamathoz)
+    - Requests (ha külső HTTP-kérések is vannak)
+    - CBOR / JSON modul (ha bővíted a kommunikációt)
+    - Watchdog (opcionális) – fájlrendszer figyeléshez
 
 ### 🧪 Példa használat
-Beállított alacsony fény → alvásbarát értékelés ✅
+- Beállított alacsony fény → alvásbarát értékelés ✅
+- Zajesemény → azonnali adatküldés + naplózás
+- Eco mód aktiválása → ritkább frissítések, kevesebb fogyasztás
 
-Zajesemény → azonnali adatküldés + naplózás
-
-Eco mód aktiválása → ritkább frissítések, kevesebb fogyasztás
-
-### 📜 Licenc
+### 📜 License
 MIT License © 2025 Viktor Mózer
