@@ -65,7 +65,7 @@ A szerver a http://<gép-ip>:5000 címen elérhető.
 - Eco mód vezérlése
 - Grafikonok letöltése ZIP-ben
 
-### 🔧 Követelmények
+## 🔧 Követelmények
 - Hardver: 
     - ESP32 DevKit
     - AHTX0
@@ -84,10 +84,10 @@ A szerver a http://<gép-ip>:5000 címen elérhető.
     - CBOR / JSON modul (ha bővíted a kommunikációt)
     - Watchdog (opcionális) – fájlrendszer figyeléshez
 
-### 🧪 Példa használat
+## 🧪 Példa használat
 - Beállított alacsony fény → alvásbarát értékelés ✅
 - Zajesemény → azonnali adatküldés + naplózás
 - Eco mód aktiválása → ritkább frissítések, kevesebb fogyasztás
 
-### 📜 License
+## 📜 License
 MIT License © 2025 Viktor Mózer
