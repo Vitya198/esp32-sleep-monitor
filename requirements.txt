@@ -1,0 +1,24 @@
+# Alap könyvtárak
+Flask==2.3.2
+Flask-SocketIO==5.3.4
+eventlet==0.33.3
+pandas==2.2.1
+msgpack==1.0.7
+matplotlib==3.8.4
+numpy==1.26.4
+
+# Fejlesztési segédletek
+python-dotenv==1.0.1       # környezeti változók
+watchdog==4.0.0            # automatikus újratöltés
+ipython==8.24.0            # interaktív hibakeresés
+black==24.4.2              # automatikus kódformázás
+flake8==7.0.0              # kódkonvenció ellenőrzés
+
+#⚙️ Használat javasolt eljárással
+python -m venv venv
+source venv/bin/activate   # Windows: venv\Scripts\activate
+pip install -r dev-requirements.txt
+
+#🛠️ Ajánlott app.py fejlesztéshez 
+from dotenv import load_dotenv
+load_dotenv()
